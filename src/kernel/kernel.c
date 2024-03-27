@@ -1,9 +1,8 @@
 #include <stdint.h>
-#include <stdio.h>
 volatile uint8_t *uart = (uint8_t *) 0x09000000;
  
-void putchar(char c) {
-    *uart = c;
+void putchar(char c){
+	*uart = c;
 }
  
 void print(const char *s) {
@@ -13,5 +12,5 @@ void print(const char *s) {
     }
 }
 void kmain(void) {
-     print("Hello world!\n");
+     print("Real Work sould start NOW!!!!!\n");
 }
