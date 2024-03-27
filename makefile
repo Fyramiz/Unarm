@@ -1,5 +1,4 @@
-
-kernel.bin: kernel/boot.s
-	as -o out/kernel/boot.o kernel/boot.s
-	ld -o out/executable/kernel.bin out/kernel/boot.o -T linker.ld
-	objcopy -O binary out/executable/kernel.bin out/flashable/kernel.bin
+kernel.elf: src/kernel/boot.s src/kernel/kernel.c
+	 aarch64-none-elf-as src/kernel/boot.s -o out/kernel/boot.o
+	 aarch64-none-elf-gcc -ffreestanding -c src/kernel/kernel.c -o out/kernel/kernel.o
+	 aarch64-none-elf-ld -nostdlib -Tlinker.ld out/kernel/boot.o out/kernel/kernel.o -o out/kernel.elf
