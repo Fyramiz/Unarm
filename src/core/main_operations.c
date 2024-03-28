@@ -1,62 +1,35 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <kernel.h>
+#include <unlibs.h>
 
-int cp(const char *from, const char *to)
+volatile unsigned int * const UART0DR = (unsigned int *) 0x09000000;
+volatile unsigned int * const UART0FR = (unsigned int *) 0x09000018;
+
+
+void uart_putc(const char c)
 {
-    int fd_to, fd_from;
-    char buf[4096];
-    ssize_t nread;
-    int saved_errno;
-
-    fd_from = open(from, O_RDONLY);
-    if (fd_from < 0)
-        return -1;
-
-    fd_to = open(to, O_WRONLY | O_CREAT | O_EXCL, 0666);
-    if (fd_to < 0)
-        goto out_error;
-
-    while (nread = read(fd_from, buf, sizeof buf), nread > 0)
-    {
-        char *out_ptr = buf;
-        ssize_t nwritten;
-
-        do {
-            nwritten = write(fd_to, out_ptr, nread);
-
-            if (nwritten >= 0)
-            {
-                nread -= nwritten;
-                out_ptr += nwritten;
-            }
-            else if (errno != EINTR)
-            {
-                goto out_error;
-            }
-        } while (nread > 0);
-    }
-
-    if (nread == 0)
-    {
-        if (close(fd_to) < 0)
-        {
-            fd_to = -1;
-            goto out_error;
-        }
-        close(fd_from);
-
-        /* Success! */
-        return 0;
-    }
-
-  out_error:
-    saved_errno = errno;
-
-    close(fd_from);
-    if (fd_to >= 0)
-        close(fd_to);
-
-    errno = saved_errno;
-    return -1;
+	// Wait for UART to become ready to transmit.
+	while ((*UART0FR) & (1 << 5)) { }
+	*UART0DR = c; /* Transmit char */
 }
+
+void uart_puthex(uint64_t n)
+{
+	const char *hexdigits = "0123456789ABCDEF";
+
+	uart_putc('0');
+	uart_putc('x');
+	for (int i = 60; i >= 0; i -= 4){
+		uart_putc(hexdigits[(n >> i) & 0xf]);
+		if (i == 32)
+			uart_putc(' ');
+	}
+}
+
+void print(const char *s) {
+	for (int i = 0; s[i] != '\0'; i ++)
+		uart_putc((unsigned char)s[i]);
+}
+
