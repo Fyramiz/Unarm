@@ -1,3 +1,8 @@
+cross = aarch-none-elf-
+cc = ${cross}gcc
+as = ${cross}as
+
+
 kernel: src/kernel/boot.s src/kernel/kernel.c
 	 mkdir out/
 	 mkdir out/kernel
